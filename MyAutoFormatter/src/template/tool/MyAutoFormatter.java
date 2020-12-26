@@ -61,7 +61,7 @@ public class MyAutoFormatter implements Tool, KeyListener {
 		if (e.getKeyCode() == KeyEvent.VK_H && e.getModifiers() == InputEvent.CTRL_MASK) {
 			e.consume();
 			int oldEditorLength = editor.getText().length();
-			Formater formater = new Formater();
+			Formatter formater = new Formatter();
 			formater.format(editor.getText());
 			int carepos = editor.getCaretOffset();
 			int scrollPosition = editor.getScrollPosition();

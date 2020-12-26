@@ -82,30 +82,21 @@ public class Operator implements Comparable<Operator> {
 
 	private String replaceFirst(String string, String regex, String replace) {
 
-		if (regex.length() == 2) {
-			string = string.replaceFirst(Pattern.quote(replace), "");
-			return string;
-		}
+	    if (regex.length() == 2) {
+	      string = string.replaceFirst(Pattern.quote(regex), replace);
+	      return string;
+	    }
 
-		char[] charsOfString = string.toCharArray();
-		char firstChar = regex.charAt(0);
+	    for (Operator o : Formatter.operators) {
+	      if (o.getOperator().length() == 2) {
+	        if (string.contains(o.getOperator())) {
+	          string = string.replace(o.getOperator(), "aa");
+	        }
+	      }
+	    }
 
-		for (int i = 0; i < charsOfString.length; i++) {
-			if (charsOfString[i] == firstChar) {
-				charsOfString[i] = (char) 0;
-				if (i + 1 < charsOfString.length) {
-					if (charsOfString[i] == charsOfString[i + 1] || charsOfString[i] == '=') {
-						charsOfString[i] = 'a';
-						charsOfString[i + 1] = 'a';
-						break;
-					}
-				}
-				break;
-			}
-		}
-
-		return charArrayToString(charsOfString);
-	}
+	    return string.replaceFirst(Pattern.quote(regex), replace);
+	  }
 
 	public int compareTo(Operator other) {
 		return other.getOperator().length() - this.getOperator().length();
