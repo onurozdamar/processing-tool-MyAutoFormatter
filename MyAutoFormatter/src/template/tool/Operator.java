@@ -23,8 +23,10 @@ public class Operator implements Comparable<Operator> {
 
 		for (int i = 0; i < operatorCount; i++) {
 			temp = line;
+			if (operator.length() == 1)
+				temp = replaceTwoLengthOperators(temp);
 			for (int j = 0; j < i; j++)
-				temp = replaceFirst(temp, operator, "");
+				temp = temp.replaceFirst(Pattern.quote(operator), "");
 			int index = temp.indexOf(operator);
 			line = addSpacedText(line, index + k);
 			k += operator.length();
@@ -80,23 +82,18 @@ public class Operator implements Comparable<Operator> {
 		return sb.toString();
 	}
 
-	private String replaceFirst(String string, String regex, String replace) {
+	private String replaceTwoLengthOperators(String string) {
 
-	    if (regex.length() == 2) {
-	      string = string.replaceFirst(Pattern.quote(regex), replace);
-	      return string;
-	    }
+		for (Operator o : Formatter.operators) {
+			if (o.getOperator().length() == 2) {
+				if (string.contains(o.getOperator())) {
+					string = string.replace(o.getOperator(), "aa");
+				}
+			}
+		}
 
-	    for (Operator o : Formatter.operators) {
-	      if (o.getOperator().length() == 2) {
-	        if (string.contains(o.getOperator())) {
-	          string = string.replace(o.getOperator(), "aa");
-	        }
-	      }
-	    }
-
-	    return string.replaceFirst(Pattern.quote(regex), replace);
-	  }
+		return string;
+	}
 
 	public int compareTo(Operator other) {
 		return other.getOperator().length() - this.getOperator().length();
