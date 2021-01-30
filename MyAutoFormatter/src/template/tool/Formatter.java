@@ -73,7 +73,14 @@ public class Formatter {
 			line = line.replace("++", "");
 		}
 		if (line.contains("//")) {
-			line = line.replace("//", "");
+			StringBuilder sb = new StringBuilder();
+			char[] chars = line.toCharArray();
+			int i = line.indexOf('/') - 1;
+			while (i + 1 < chars.length) {
+				sb.append(chars[i + 1]);
+				i++;
+			}
+			line = line.replace(sb.toString(), "");
 		}
 		if (line.contains("/*")) {
 			line = line.replace("/*", "");
