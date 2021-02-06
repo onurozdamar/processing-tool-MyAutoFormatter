@@ -1,52 +1,34 @@
 package template.tool;
 
-import java.util.ArrayList;
-import java.util.regex.Pattern;
-
 public class Operator implements Comparable<Operator> {
 
 	private String operator;
-	private static final char SPACE = ' ';
+	private char SPACE = ' ';
+	private int index;
 
 	Operator(String operator) {
 		this.operator = operator;
 	}
 
-	private String addSpacedText(String line, int index) {
+	public String addSpace(String line) {
 		return trimLeft(line, index) + SPACE + operator + SPACE + trimRight(line, index);
-	}
-
-	String getSpacedText(String line, int operatorCount) {
-		String temp = line;
-
-		int k = 0;
-
-		for (int i = 0; i < operatorCount; i++) {
-			temp = line;
-			if (operator.length() == 1)
-				temp = replaceTwoLengthOperators(temp);
-			for (int j = 0; j < i; j++)
-				temp = temp.replaceFirst(Pattern.quote(operator), "");
-			int index = temp.indexOf(operator);
-			line = addSpacedText(line, index + k);
-			k += operator.length();
-		}
-
-		return line;
 	}
 
 	private String trimLeft(String line, int index) {
 		char[] chars = line.substring(0, index).toCharArray();
 
+		boolean allSpace = true;
+
 		for (int i = index - 1; i >= 0; i--) {
 			if (chars[i] == SPACE) {
 				chars[i] = (char) 0;
 			} else {
+				allSpace = false;
 				break;
 			}
 		}
 
-		return charArrayToString(chars);
+		return allSpace ? line.substring(0, index - 1) : charArrayToString(chars);
 	}
 
 	private String trimRight(String line, int index) {
@@ -63,14 +45,6 @@ public class Operator implements Comparable<Operator> {
 		return charArrayToString(chars);
 	}
 
-	public String toString() {
-		return operator;
-	}
-
-	public String getOperator() {
-		return operator;
-	}
-
 	private String charArrayToString(char[] arr) {
 		StringBuilder sb = new StringBuilder();
 		for (char c : arr) {
@@ -82,17 +56,20 @@ public class Operator implements Comparable<Operator> {
 		return sb.toString();
 	}
 
-	private String replaceTwoLengthOperators(String string) {
+	public String toString() {
+		return operator;
+	}
 
-		for (Operator o : Formatter.operators) {
-			if (o.getOperator().length() == 2) {
-				if (string.contains(o.getOperator())) {
-					string = string.replace(o.getOperator(), "aa");
-				}
-			}
-		}
+	public void setIndex(int index) {
+		this.index = index;
+	}
 
-		return string;
+	String getOperator() {
+		return operator;
+	}
+
+	int getOperatorLength() {
+		return operator.length();
 	}
 
 	public int compareTo(Operator other) {

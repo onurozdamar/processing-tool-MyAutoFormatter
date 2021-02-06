@@ -1,17 +1,16 @@
 package template.tool;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.regex.Pattern;
 
-public class Formatter {
+class Formatter {
 
-	public static ArrayList<Operator> operators;
+	private String[] operators = { "==", "!=", "&&", "||", "<=", ">=", "+=", "-=", "*=", "/=", "%=", "+", "-", "*", "/",
+			"%", "=", ":", "?", "<", ">", "|", "&" };
+
 	private String[] lines;
 
 	Formatter() {
-		operators = new ArrayList();
-		addOperators();
 	}
 
 	public void format(String text) {
@@ -20,9 +19,7 @@ public class Formatter {
 		for (int i = 0; i < lines.length; i++) {
 			ArrayList<Operator> operatorsInLine = getOperatorsInLine(lines[i]);
 			for (Operator operator : operatorsInLine) {
-				if (operator == null)
-					continue;
-				lines[i] = operator.getSpacedText(lines[i], getOperatorCountInLine(lines[i], operator));
+				lines[i] = operator.addSpace(lines[i]);
 			}
 		}
 	}
@@ -31,89 +28,105 @@ public class Formatter {
 		return text.split("\n");
 	}
 
+	private String createReplaceString(int length) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < length; i++) {
+			sb.append("s");
+		}
+		return sb.toString();
+	}
+
 	private ArrayList<Operator> getOperatorsInLine(String line) {
-		ArrayList<Operator> operatorsInLine = new ArrayList();
+		ArrayList<Operator> operatorsInLine = new ArrayList<Operator>();
 		line = replace(line);
 
-		for (Operator operator : operators) {
-			if (line.contains(operator.getOperator())) {
-				operatorsInLine.add(operator);
-				line = line.replace(operator.getOperator(), "");
+		for (int i = 0; i < operators.length; i++) {
+			if (line.contains(operators[i])) {
+				Operator o = new Operator(operators[i]);
+				o.setIndex(line.indexOf(operators[i]));
+				operatorsInLine.add(o);
+				line = o.addSpace(line);
+				line = line.replaceFirst(Pattern.quote(operators[i]), createReplaceString(operators[i].length()));
+				i--;
 			}
 		}
 		return operatorsInLine;
 	}
 
-	private int getOperatorCountInLine(String line, Operator operator) {
-		int operatorCount = 0;
+	private String replace(String line) {
+		line = replaceFixedOperators(line);
 
-		line = replace(line);
-
-		if (operator.getOperator().length() == 1) { // replace 2 length operators
-			for (Operator o : operators) {
-				if (o.getOperator().length() == 2) {
-					line = line.replace(o.getOperator(), "");
-				}
-			}
-		}
-
-		while (line.contains(operator.toString())) {
-			line = line.replaceFirst(Pattern.quote(operator.toString()), "");
-			operatorCount++;
-		}
-
-		return operatorCount;
-	}
-
-	public static String replace(String line) {
-		if (line.contains("--")) { // dont want to add space that
-			line = line.replace("--", "");
-		}
-		if (line.contains("++")) {
-			line = line.replace("++", "");
+		if (line.contains("\"")) {
+			line = replaceStrings(line);
 		}
 		if (line.contains("//")) {
-			StringBuilder sb = new StringBuilder();
-			char[] chars = line.toCharArray();
-			int i = line.indexOf('/') - 1;
-			while (i + 1 < chars.length) {
-				sb.append(chars[i + 1]);
-				i++;
-			}
-			line = line.replace(sb.toString(), "");
+			line = replaceSingleLineComment(line);
 		}
-		if (line.contains("/*")) {
-			line = line.replace("/*", "");
-		}
-		if (line.contains("*/")) {
-			line = line.replace("*/", "");
-		}
-		if (line.contains(".*")) {
-			line = line.replace(".*", "");
+		if (line.contains("'")) {
+			line = replaceChars(line);
 		}
 
+		return line;
+	}
+
+	private String replaceFixedOperators(String line) {
+		String[] operatorsDontSpace = { "--", "++", ".*", "/*", "*/" };
+		for (int i = 0; i < operatorsDontSpace.length; i++) {
+			if (line.contains(operatorsDontSpace[i])) { // dont want to add space these
+				line = line.replace(operatorsDontSpace[i], createReplaceString(operatorsDontSpace[i].length()));
+			}
+		}
+		return line;
+	}
+
+	private String replaceSingleLineComment(String line) {
+		StringBuilder sb = new StringBuilder();
+		char[] chars = line.toCharArray();
+		int i = line.indexOf("//") - 1;
+		while (i + 1 < chars.length) {
+			sb.append(chars[i + 1]);
+			i++;
+		}
+		line = line.replace(sb.toString(), createReplaceString(sb.length()));
+		return line;
+	}
+
+	private String replaceStrings(String line) {// e.g. "this is string"
 		char[] chars = line.toCharArray();
 
 		for (int i = 0; i < chars.length; i++) {
 			if (chars[i] == '"') {
 				StringBuilder sb = new StringBuilder();
-				while (i + 1 < chars.length && chars[i + 1] != '"') {
-					sb.append(chars[i + 1]);
+				do {
+					sb.append(chars[i]);
 					i++;
+				} while (i + 1 < chars.length && chars[i + 1] != '"');
+				sb.append(chars[i]);
+				if (i + 1 < chars.length) {
+					sb.append(chars[++i]);
 				}
-				line = line.replace(sb.toString(), "");
-				i++;
-			} else if (chars[i] == '\'') {
-				StringBuilder sb = new StringBuilder();
-				while (i + 1 < chars.length && chars[i + 1] != '\'') {
-					sb.append(chars[i + 1]);
-					i++;
-				}
-				line = line.replace(sb.toString(), "");
+				line = line.replace(sb.toString(), createReplaceString(sb.length()));
 				i++;
 			}
 		}
+		return line;
+	}
 
+	private String replaceChars(String line) { // e.g. 'a'
+		char[] chars = line.toCharArray();
+
+		for (int i = 0; i < chars.length; i++) {
+			if (chars[i] == '\'') {
+				StringBuilder sb = new StringBuilder();
+
+				sb.append(chars[i]);
+				sb.append(chars[i + 1]);
+				sb.append(chars[i + 2]);
+
+				line = line.replace(sb.toString(), createReplaceString(3));
+				i += 3;
+			}
+		}
 		return line;
 	}
 
@@ -123,34 +136,5 @@ public class Formatter {
 			sb.append(line + "\n");
 		}
 		return sb.toString();
-	}
-
-	private void addOperators() {
-		operators.add(new Operator("=="));
-		operators.add(new Operator("!="));
-		operators.add(new Operator("&&"));
-		operators.add(new Operator("||"));
-		operators.add(new Operator("<="));
-		operators.add(new Operator(">="));
-		operators.add(new Operator("+="));
-		operators.add(new Operator("-="));
-		operators.add(new Operator("*="));
-		operators.add(new Operator("/="));
-		operators.add(new Operator("%="));
-
-		operators.add(new Operator("+"));
-		operators.add(new Operator("-"));
-		operators.add(new Operator("*"));
-		operators.add(new Operator("/"));
-		operators.add(new Operator("%"));
-		operators.add(new Operator("="));
-		operators.add(new Operator(":"));
-		operators.add(new Operator("?"));
-		operators.add(new Operator("<"));
-		operators.add(new Operator(">"));
-		operators.add(new Operator("|"));
-		operators.add(new Operator("&"));
-
-		Collections.sort(operators);
 	}
 }

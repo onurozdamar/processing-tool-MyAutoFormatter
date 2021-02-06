@@ -19,7 +19,7 @@
  * Boston, MA  02111-1307  USA
  *
  * @author   Your Name http://yoururl.com
- * @modified 01/30/2021
+ * @modified 02/06/2021
  * @version  1.0.0
  */
 
@@ -76,7 +76,6 @@ public class MyAutoFormatter implements Tool, KeyListener {
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
 
 	}
 
