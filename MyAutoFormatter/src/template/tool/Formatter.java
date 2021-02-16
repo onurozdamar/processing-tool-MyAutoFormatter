@@ -93,18 +93,15 @@ class Formatter {
 
 	private String replaceStrings(String line) {// e.g. "this is string"
 		char[] chars = line.toCharArray();
+		char STRING = '"';
 
 		for (int i = 0; i < chars.length; i++) {
-			if (chars[i] == '"') {
+			if (chars[i] == STRING) {
 				StringBuilder sb = new StringBuilder();
 				do {
 					sb.append(chars[i]);
-					i++;
-				} while (i + 1 < chars.length && chars[i + 1] != '"');
+				} while (i + 1 < chars.length && chars[++i] != STRING);
 				sb.append(chars[i]);
-				if (i + 1 < chars.length) {
-					sb.append(chars[++i]);
-				}
 				line = line.replace(sb.toString(), createReplaceString(sb.length()));
 				i++;
 			}
